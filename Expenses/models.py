@@ -34,5 +34,11 @@ class Expense(models.Model):
         # Entradas (ingresos) = positivo, Salidas (gastos) = negativo
         return self.amount if self.type == 'entry' else -self.amount
 
+    def is_image(self):
+        if not self.image:
+            return False
+        name = self.image.name.lower()
+        return any(name.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'])
+
     def __str__(self):
         return f"{self.description} - {self.amount} on {self.date}"

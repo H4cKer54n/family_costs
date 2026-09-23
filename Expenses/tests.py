@@ -24,8 +24,8 @@ class ExpenseSystemTests(TestCase):
             'remember_me': True
         })
         self.assertEqual(response.status_code, 302)
-        # La expiración debe ser mayor a 0 (1209600 s)
-        self.assertEqual(self.client.session.get_expiry_age(), 1209600)
+        # La expiración debe ser de 1 año (31536000 s)
+        self.assertEqual(self.client.session.get_expiry_age(), 31536000)
 
     def test_login_no_remember_me_session(self):
         """Verifica que sin recordar sesión expire con el cierre del navegador (0)"""

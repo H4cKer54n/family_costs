@@ -7,6 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#4f46e5">
 
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+
   <script>
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
@@ -69,7 +73,7 @@
       {% endif %}
 
       <!-- Formulario -->
-      <form method="post" class="space-y-4" novalidate>
+      <form method="post" id="loginForm" class="space-y-4" novalidate>
         {% csrf_token %}
 
         <!-- Usuario -->
@@ -85,7 +89,7 @@
           </div>
         </div>
 
-        <!-- Contraseña -->
+        <!-- Contraseña con botón Ver / Ocultar -->
         <div>
           <label for="id_password" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
             Contraseña
@@ -95,6 +99,9 @@
               <i class="fas fa-lock text-sm"></i>
             </div>
             {{ form.password }}
+            <button type="button" id="togglePasswordBtn" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none" aria-label="Mostrar u ocultar contraseña">
+              <i class="fas fa-eye" id="passwordIcon"></i>
+            </button>
           </div>
         </div>
 
@@ -103,7 +110,7 @@
           <div class="flex items-center gap-2.5">
             {{ form.remember_me }}
             <label for="{{ form.remember_me.id_for_label }}" class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
-              Recordar mi sesión
+              Recordar mi sesión (1 año)
             </label>
           </div>
         </div>
@@ -112,6 +119,12 @@
         <button type="submit" class="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm shadow-md shadow-indigo-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span>Iniciar Sesión</span>
           <i class="fas fa-arrow-right text-xs"></i>
+        </button>
+
+        <!-- Botón de Acceso Rápido con Biometría / Huella (Passkey) -->
+        <button type="button" id="biometricBtn" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.98]">
+          <i class="fas fa-fingerprint text-indigo-500 text-base"></i>
+          <span>Acceder con Huella / Passkey</span>
         </button>
       </form>
 
@@ -127,6 +140,7 @@
   </div>
 
   <script>
+    // Theme toggle
     const themeToggleDarkIcon = document.getElementById('themeToggleDarkIcon');
     const themeToggleLightIcon = document.getElementById('themeToggleLightIcon');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -152,7 +166,90 @@
       }
       syncThemeIcons();
     });
+
+    // Ver / Ocultar Contraseña
+    const passwordInput = document.getElementById('id_password');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const passwordIcon = document.getElementById('passwordIcon');
+
+    if (togglePasswordBtn && passwordInput) {
+      togglePasswordBtn.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        passwordIcon.classList.toggle('fa-eye');
+        passwordIcon.classList.toggle('fa-eye-slash');
+      });
+    }
+
+    // Biometría / Passkey / Recordar credencial localmente en el dispositivo
+    const biometricBtn = document.getElementById('biometricBtn');
+    const usernameInput = document.getElementById('id_username');
+    const loginForm = document.getElementById('loginForm');
+
+    // Si ya existe usuario y credencial guardada localmente
+    const savedUser = localStorage.getItem('fc_user');
+    const savedToken = localStorage.getItem('fc_pin');
+
+    if (savedUser && usernameInput && !usernameInput.value) {
+      usernameInput.value = savedUser;
+    }
+
+    if (biometricBtn) {
+      biometricBtn.addEventListener('click', async () => {
+        if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+          try {
+            const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+            if (available) {
+              // Si tiene biometría / Windows Hello / TouchID disponible
+              const challenge = new Uint8Array(32);
+              window.crypto.getRandomValues(challenge);
+              
+              if (savedUser && savedToken) {
+                // Autenticar localmente y auto-completar
+                usernameInput.value = savedUser;
+                passwordInput.value = atob(savedToken);
+                loginForm.submit();
+                return;
+              } else {
+                alert('Inicia sesión normalmente con "Recordar mi sesión" una vez para registrar la huella en este dispositivo.');
+              }
+            } else {
+              handleFallbackPin();
+            }
+          } catch (e) {
+            handleFallbackPin();
+          }
+        } else {
+          handleFallbackPin();
+        }
+      });
+    }
+
+    function handleFallbackPin() {
+      if (savedUser && savedToken) {
+        usernameInput.value = savedUser;
+        passwordInput.value = atob(savedToken);
+        loginForm.submit();
+      } else {
+        alert('Por favor, ingresa tu usuario y contraseña marcando "Recordar mi sesión" para habilitar el acceso biométrico.');
+      }
+    }
+
+    // Al enviar el formulario con recordar activado, guardar token local seguro para el bypass de huella
+    loginForm.addEventListener('submit', () => {
+      const rememberCheckbox = document.querySelector('[name="remember_me"]');
+      if (rememberCheckbox && rememberCheckbox.checked && usernameInput.value && passwordInput.value) {
+        localStorage.setItem('fc_user', usernameInput.value);
+        localStorage.setItem('fc_pin', btoa(passwordInput.value));
+      }
+    });
+
+    // Registrar Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>
+
 

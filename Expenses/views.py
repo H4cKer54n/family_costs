@@ -286,8 +286,8 @@ class CustomLoginView(LoginView):
     def form_valid(self, form):
         remember_me = form.cleaned_data.get('remember_me')
         if remember_me:
-            # 2 semanas (14 días en segundos)
-            self.request.session.set_expiry(1209600)
+            # 1 año (365 días en segundos)
+            self.request.session.set_expiry(31536000)
         else:
             # Expira cuando el navegador se cierra
             self.request.session.set_expiry(0)

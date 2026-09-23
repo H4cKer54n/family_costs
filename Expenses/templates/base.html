@@ -7,6 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#4f46e5">
 
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FamilyCosts">
+
   <!-- Script de tema para evitar parpadeo blanco (FOUC) -->
   <script>
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -77,6 +84,24 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body class="min-h-full flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
+
+  <!-- PWA Install Banner -->
+  <div id="pwaInstallBanner" class="hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white px-4 py-2.5 shadow-md">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 text-sm">
+      <div class="flex items-center gap-2.5 font-medium">
+        <i class="fas fa-mobile-screen-button text-base animate-bounce"></i>
+        <span>¿Querés instalar la app de <strong>FamilyCosts</strong> en tu celular o PC?</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="pwaInstallBtn" type="button" class="px-3 py-1 bg-white text-indigo-700 font-semibold text-xs rounded-lg shadow-sm hover:bg-indigo-50 active:scale-95 transition">
+          <i class="fas fa-download mr-1"></i> Instalar App
+        </button>
+        <button id="pwaDismissBtn" type="button" class="text-white/80 hover:text-white p-1 text-xs" title="Cerrar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Navegación Superior -->
   <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors duration-200">
@@ -241,7 +266,43 @@
     </div>
   </footer>
 
-  <!-- Scripts para Dark Mode & Drawer Móvil -->
+  <!-- Modal de Novedad / Rediseño (Se muestra una única vez) -->
+  <div id="redesignModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm hidden transition-opacity duration-300">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 dark:border-slate-800 text-center relative transform transition-all duration-300 scale-95" id="redesignModalContent">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 text-2xl">
+        <i class="fas fa-sparkles"></i>
+      </div>
+      <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">
+        ¡Nueva Cara para FamilyCosts! ✨
+      </h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
+        Tranquilidad total: <strong>no hackearon nada</strong>. Actualizamos el diseño para darle vida a la aplicación y que sea mucho más moderna, rápida y cómoda de usar.
+      </p>
+      <div class="text-left bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 mb-6 space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-check text-emerald-500"></i>
+          <span>Modo Oscuro y Claro integrado.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fas fa-check text-emerald-500"></i>
+          <span>Diseño 100% adaptado a celulares.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fas fa-check text-emerald-500"></i>
+          <span>Soporte PWA e instalación en pantalla de inicio.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fas fa-check text-emerald-500"></i>
+          <span>Previsualización rápida de comprobantes y fotos.</span>
+        </div>
+      </div>
+      <button id="closeRedesignModalBtn" type="button" class="w-full py-3 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/25 active:scale-98 transition">
+        ¡Excelente, a usarla! 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- Scripts para Dark Mode, PWA, Modal & Service Worker -->
   <script>
     // Manejo de Dark Mode
     const themeToggleDarkIcon = document.getElementById('themeToggleDarkIcon');
@@ -250,27 +311,28 @@
 
     function syncThemeIcons() {
       if (document.documentElement.classList.contains('dark')) {
-        themeToggleLightIcon.classList.remove('hidden');
-        themeToggleDarkIcon.classList.add('hidden');
+        themeToggleLightIcon?.classList.remove('hidden');
+        themeToggleDarkIcon?.classList.add('hidden');
       } else {
-        themeToggleDarkIcon.classList.remove('hidden');
-        themeToggleLightIcon.classList.add('hidden');
+        themeToggleDarkIcon?.classList.remove('hidden');
+        themeToggleLightIcon?.classList.add('hidden');
       }
     }
     syncThemeIcons();
 
-    themeToggleBtn.addEventListener('click', function() {
-      if (document.documentElement.classList.contains('dark')) {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      }
-      syncThemeIcons();
-      // Disparar evento para que gráficos Chart.js puedan escuchar el cambio de color
-      window.dispatchEvent(new Event('themechange'));
-    });
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', function() {
+        if (document.documentElement.classList.contains('dark')) {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        }
+        syncThemeIcons();
+        window.dispatchEvent(new Event('themechange'));
+      });
+    }
 
     // Menú móvil toggle
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -278,6 +340,78 @@
     if (mobileMenuBtn && mobileMenu) {
       mobileMenuBtn.addEventListener('click', () => {
         mobileMenu.classList.toggle('hidden');
+      });
+    }
+
+    // Modal de bienvenida / aviso de rediseño (una sola vez)
+    const redesignModal = document.getElementById('redesignModal');
+    const redesignModalContent = document.getElementById('redesignModalContent');
+    const closeRedesignModalBtn = document.getElementById('closeRedesignModalBtn');
+
+    function checkRedesignNotice() {
+      if (!localStorage.getItem('redesign_notice_v1_seen')) {
+        if (redesignModal) {
+          redesignModal.classList.remove('hidden');
+          setTimeout(() => {
+            redesignModalContent?.classList.remove('scale-95');
+            redesignModalContent?.classList.add('scale-100');
+          }, 50);
+        }
+      }
+    }
+
+    if (closeRedesignModalBtn) {
+      closeRedesignModalBtn.addEventListener('click', () => {
+        localStorage.setItem('redesign_notice_v1_seen', 'true');
+        if (redesignModal) {
+          redesignModal.classList.add('opacity-0');
+          setTimeout(() => redesignModal.classList.add('hidden'), 300);
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', checkRedesignNotice);
+
+    // Registro de Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register("{% static 'sw.js' %}")
+          .then(reg => console.log('SW registrado con éxito:', reg.scope))
+          .catch(err => console.log('Fallo registro SW:', err));
+      });
+    }
+
+    // Manejo del banner de instalación PWA
+    let deferredPrompt = null;
+    const pwaBanner = document.getElementById('pwaInstallBanner');
+    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+    const pwaDismissBtn = document.getElementById('pwaDismissBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!sessionStorage.getItem('pwa_banner_dismissed') && pwaBanner) {
+        pwaBanner.classList.remove('hidden');
+      }
+    });
+
+    if (pwaInstallBtn) {
+      pwaInstallBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('Usuario aceptó instalar PWA');
+        }
+        deferredPrompt = null;
+        if (pwaBanner) pwaBanner.classList.add('hidden');
+      });
+    }
+
+    if (pwaDismissBtn) {
+      pwaDismissBtn.addEventListener('click', () => {
+        sessionStorage.setItem('pwa_banner_dismissed', 'true');
+        if (pwaBanner) pwaBanner.classList.add('hidden');
       });
     }
   </script>

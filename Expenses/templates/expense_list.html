@@ -187,8 +187,14 @@
             <!-- Adjunto -->
             <td class="py-3.5 px-4 whitespace-nowrap text-center">
               {% if expense.image %}
-                <a href="{{ expense.image.url }}" target="_blank" class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-slate-800 transition" title="Ver adjunto">
-                  <i class="fas fa-paperclip text-sm"></i>
+                <a href="{{ expense.image.url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition" title="Abrir archivo en pestaña nueva">
+                  {% if expense.is_image %}
+                    <i class="fas fa-image text-xs"></i>
+                    <span>Ver Imagen</span>
+                  {% else %}
+                    <i class="fas fa-file-pdf text-xs"></i>
+                    <span>Ver Adjunto</span>
+                  {% endif %}
                 </a>
               {% else %}
                 <span class="text-slate-300 dark:text-slate-600">-</span>
@@ -213,7 +219,7 @@
 
           <!-- Modal Detalle del Movimiento (Desktop & Mobile) -->
           <div id="modal-{{ expense.id }}" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
               <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                   <i class="fas fa-receipt text-indigo-500"></i> Detalle del Movimiento
@@ -266,11 +272,19 @@
               </div>
 
               {% if expense.image %}
-              <div>
-                <p class="text-xs text-slate-400 mb-1">Comprobante adjunto</p>
-                <a href="{{ expense.image.url }}" target="_blank" class="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-                  <i class="fas fa-external-link-alt"></i> Ver archivo completo
-                </a>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <p class="text-xs font-bold uppercase text-slate-400">Comprobante Adjunto</p>
+                  <a href="{{ expense.image.url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                    <i class="fas fa-arrow-up-right-from-square"></i>
+                    <span>Abrir en pestaña nueva</span>
+                  </a>
+                </div>
+                {% if expense.is_image %}
+                  <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 flex items-center justify-center max-h-64">
+                    <img src="{{ expense.image.url }}" alt="Comprobante de {{ expense.description }}" class="w-full h-auto max-h-64 object-contain">
+                  </div>
+                {% endif %}
               </div>
               {% endif %}
 
@@ -350,8 +364,12 @@
 
         <div class="flex items-center gap-1">
           {% if expense.image %}
-            <a href="{{ expense.image.url }}" target="_blank" class="p-2 rounded-xl text-indigo-600 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800" title="Ver adjunto">
-              <i class="fas fa-paperclip"></i>
+            <a href="{{ expense.image.url }}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl text-indigo-600 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800" title="Abrir archivo en pestaña nueva">
+              {% if expense.is_image %}
+                <i class="fas fa-image"></i>
+              {% else %}
+                <i class="fas fa-file-pdf"></i>
+              {% endif %}
             </a>
           {% endif %}
           <button type="button" onclick="openExpenseModal('modal-{{ expense.id }}')" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
