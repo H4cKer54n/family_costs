@@ -1,0 +1,13 @@
+*.pyc
+__pycache__/
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+.venv/
+venv/
+env/
+media/
+family_costs.sock
+*.log
+staticfiles/
+.env

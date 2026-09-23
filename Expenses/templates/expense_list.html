@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2 class="mb-4">Listado de Entradas/Gastos</h2>
+
+<!-- Barra de acciones -->
+<div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+  <a href="{% url 'expenses:add'%}" class="btn btn-outline-primary">
+     ➕ Agregar
+  </a>
+  <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#filterModal">
+    🔍 Filtrar
+  </button>
+  <a href="{% url 'expenses:charts' %}" class="btn btn-warning">
+    📈 Gráficos
+  </a>
+  <a href="{% url 'expenses:export_csv' %}" class="btn btn-success">
+    📊 Descargar CSV
+  </a>
+  {% if request.GET %}
+    <a href="{% url 'expenses:list' %}" class="btn btn-outline-secondary">
+      ❌ Eliminar filtros
+    </a>
+  {% endif %}
+</div>
+
+<!-- Totales -->
+<div class="row mb-4">
+  <div class="col-lg-6 mb-3 mb-lg-0">
+    <div class="card bg-success text-white h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h5 class="card-title mb-0">💰 Saldo Real (Pagado)</h5>
+          <h3 class="card-text mb-0">${{ total_paid|floatformat:2 }}</h3>
+        </div>
+        <p class="card-text small mb-0">Ingresos - Gastos (solo pagos realizados)</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card bg-info text-white h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h5 class="card-title mb-0">📊 Saldo Proyectado (Todos)</h5>
+          <h3 class="card-text mb-0">${{ total_all|floatformat:2 }}</h3>
+        </div>
+        <p class="card-text small mb-0">Ingresos - Gastos (incluyendo pendientes)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de filtros -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form method="get" action="{% url 'expenses:list' %}" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="filterModalLabel">Filtrar Gastos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Primera fila: Tipo, Monto, Categoría -->
+        <div class="row mb-3">
+          <div class="col-md-3 mb-3">
+            <label for="type" class="form-label">Tipo de gasto</label>
+            <select name="type" id="type" class="form-control">
+                <option value="">-- Todos -- </option>
+                <option value="entry" {% if request.GET.type == 'entry' %}selected{% endif %}>Entrada</option>
+                <option value="exit" {% if request.GET.type == 'exit' %}selected{% endif %}>Salida</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="amount" class="form-label">Monto</label>
+            <input type="number" step="0.01" name="amount" id="amount" class="form-control" value="{{ request.GET.amount }}">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="category" class="form-label">Categoría</label>
+            <select name="category" id="category" class="form-control">
+                <option value="">-- Todas --</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="is_paid" class="form-label">Pagado</label>
+            <select name="is_paid" id="is_paid" class="form-control">
+                <option value="">-- Todos --</option>
+                <option value="true" {% if request.GET.is_paid == 'true' %}selected{% endif %}>Sí</option>
+                <option value="false" {% if request.GET.is_paid == 'false' %}selected{% endif %}>No</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Segunda fila: Fechas -->
+        <div class="row mb-3">
+          <div class="col-md-3 mb-3">
+            <label for="date_from" class="form-label">Fecha desde</label>
+            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="date_to" class="form-label">Fecha hasta</label>
+            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="created_by" class="form-label">Creado por</label>
+            <select name="created_by" id="created_by" class="form-control">
+                <option value="">-- Todos --</option>
+                {% for user in users %}
+                    <option value="{{ user.id }}" {% if request.GET.created_by == user.id|stringformat:"s" %}selected{% endif %}>{{ user.username }}</option>
+                {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="{% url 'expenses:list' %}" class="btn btn-secondary">Limpiar</a>
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Información de paginación -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-3 py-2 bg-light rounded">
+    <div class="mb-2 mb-md-0">
+        <small class="text-muted fw-semibold">
+            Mostrando {{ expenses.start_index }} - {{ expenses.end_index }} de {{ expenses.paginator.count }} registros
+            <span class="d-none d-md-inline">(Página {{ expenses.number }} de {{ expenses.paginator.num_pages }})</span>
+        </small>
+    </div>
+    <div class="d-flex align-items-center">
+        <label for="per_page_select" class="form-label me-2 mb-0 small fw-semibold">Mostrar:</label>
+        <select id="per_page_select" class="form-select form-select-sm" style="width: auto;" onchange="changePerPage(this.value)">
+            <option value="10" {% if request.GET.per_page == "10" or not request.GET.per_page %}selected{% endif %}>10</option>
+            <option value="25" {% if request.GET.per_page == "25" %}selected{% endif %}>25</option>
+            <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
+            <option value="100" {% if request.GET.per_page == "100" %}selected{% endif %}>100</option>
+        </select>
+        <small class="ms-2 text-muted d-md-none">por página</small>
+    </div>
+</div>
+
+<!-- Aquí comienza la tabla -->
+<div class="table-responsive">
+    <table class="table table-sm table-bordered table-striped table-hover mb-3" style="font-size: 0.875rem;">
+        <thead>
+            <tr>
+                <th style="width: 6%;">Tipo</th>
+                <th style="width: 8%;">Fecha</th>
+                <th style="width: 20%;">Descripción</th>
+                <th style="width: 8%;">Categoría</th>
+                <th style="width: 8%;">Creado por</th>
+                <th style="width: 8%;">Monto</th>
+                <th style="width: 6%;">Pagado</th>
+                <th style="width: 8%;">Archivo</th>
+                <th style="width: 18%;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+            <!-- Modal detalle gasto -->
+            <div class="modal fade" id="modal-{{ expense.id }}" tabindex="-1" aria-labelledby="modalLabel-{{ expense.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="modalLabel-{{ expense.id }}">Detalle del Gasto</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p><strong>Descripción:</strong> {{ expense.description }}</p>
+                      <p><strong>Fecha:</strong> {{ expense.date }}</p>
+                      <p><strong>Monto:</strong> ${{ expense.get_display_amount }}</p>
+                      <!-- Agrega más campos si quieres -->
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <tr>
+                <td>{{ expense.get_type_display }}</td>
+                <td>{{ expense.date|date:"d/m/Y" }}</td>
+                <td>{{ expense.description|truncatewords:5|default:"-" }}</td>
+                <td>{{ expense.category.name }}</td>
+                <td>{{ expense.created_by.username }}</td>
+                <td>${{ expense.get_display_amount }}</td>
+                <td>
+                    {% if expense.is_paid %}
+                        <span class="badge bg-success">Sí</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if expense.image %}
+                        <a href="{{ expense.image.url }}" target="_blank" class="btn btn-outline-info btn-sm">Ver imagen</a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <!-- Desktop: botones con texto completo -->
+                    <div class="d-none d-md-flex gap-1">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modal-{{ expense.id }}">
+                            📄 Ver
+                        </button>
+                        <a href="{% url 'expenses:update' expense.pk %}" class="btn btn-outline-primary btn-sm">✏️ Editar</a>
+                        <a href="{% url 'expenses:delete' expense.pk %}" class="btn btn-outline-danger btn-sm">🗑️ Eliminar</a>
+                    </div>
+                    <!-- Móvil: botones compactos -->
+                    <div class="d-flex d-md-none gap-1">
+                        <button type="button" class="btn btn-outline-primary btn-sm px-2" data-bs-toggle="modal" data-bs-target="#modal-{{ expense.id }}" title="Ver">
+                            📄
+                        </button>
+                        <a href="{% url 'expenses:update' expense.pk %}" class="btn btn-outline-primary btn-sm px-2" title="Editar">✏️</a>
+                        <a href="{% url 'expenses:delete' expense.pk %}" class="btn btn-outline-danger btn-sm px-2" title="Eliminar">🗑️</a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center">No se encontraron gastos. <a href="{% url 'expenses:add' %}" class="btn btn-success">Agregar uno</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="table-secondary">
+                <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                <td style="font-weight: bolder;">${{total|floatformat:2}}</td>
+                <td colspan="3"></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+
+<!-- Paginación responsive -->
+<nav aria-label="Paginación" class="mb-3">
+    <ul class="pagination pagination-sm justify-content-center flex-wrap gap-1">
+        {% if expenses.has_previous %}
+            <li class="page-item">
+                <a class="page-link px-2 py-1" href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}" title="Primera página">
+                    <span class="d-none d-md-inline">|&lt;</span>
+                    <span class="d-md-none">&lt;&lt;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link px-2 py-1" href="?page={{ expenses.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}" title="Página anterior">
+                    <span class="d-none d-md-inline">&lt;</span>
+                    <span class="d-md-none">&lt;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link px-2 py-1">
+                    <span class="d-none d-md-inline">|&lt;</span>
+                    <span class="d-md-none">&lt;&lt;</span>
+                </span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link px-2 py-1">
+                    <span class="d-none d-md-inline">&lt;</span>
+                    <span class="d-md-none">&lt;</span>
+                </span>
+            </li>
+        {% endif %}
+
+        <!-- Números de página responsive -->
+        {% for num in expenses.paginator.page_range %}
+            {% if expenses.paginator.num_pages <= 7 %}
+                <!-- Si hay 7 páginas o menos, mostrar todas -->
+                {% if num == expenses.number %}
+                    <li class="page-item active">
+                        <span class="page-link px-2 py-1">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link px-2 py-1" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% elif num == 1 or num == expenses.paginator.num_pages or num >= expenses.number|add:-2 and num <= expenses.number|add:2 %}
+                <!-- Mostrar primera, última y páginas cercanas a la actual -->
+                {% if num == expenses.number %}
+                    <li class="page-item active">
+                        <span class="page-link px-2 py-1">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link px-2 py-1" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% elif num == expenses.number|add:-3 or num == expenses.number|add:3 %}
+                <!-- Mostrar puntos suspensivos -->
+                <li class="page-item disabled">
+                    <span class="page-link px-2 py-1">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if expenses.has_next %}
+            <li class="page-item">
+                <a class="page-link px-2 py-1" href="?page={{ expenses.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}" title="Página siguiente">
+                    <span class="d-none d-md-inline">&gt;</span>
+                    <span class="d-md-none">&gt;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link px-2 py-1" href="?page={{ expenses.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' and key != 'per_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}" title="Última página">
+                    <span class="d-none d-md-inline">&gt;|</span>
+                    <span class="d-md-none">&gt;&gt;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link px-2 py-1">
+                    <span class="d-none d-md-inline">&gt;</span>
+                    <span class="d-md-none">&gt;</span>
+                </span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link px-2 py-1">
+                    <span class="d-none d-md-inline">&gt;|</span>
+                    <span class="d-md-none">&gt;&gt;</span>
+                </span>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<!-- Script para cambiar registros por página -->
+<script>
+function changePerPage(value) {
+    const url = new URL(window.location);
+    url.searchParams.set('per_page', value);
+    url.searchParams.set('page', '1'); // Reset to first page
+    window.location = url;
+}
+</script>
+
+{% endblock %}

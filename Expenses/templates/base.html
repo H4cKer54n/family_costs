@@ -1,0 +1,83 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Admin de Gastos{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+ <style>
+  .rainbow-text {
+    font-weight: bold;
+    background: linear-gradient(90deg, 
+      red, orange, yellow, green, blue, indigo, violet);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow 3s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes rainbow {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
+  }
+</style>
+</head>
+<body>
+<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'expenses:list' %}">💰 Gastos/Entradas</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'expenses:add' %}">➕ Agregar Gasto</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'expenses:list' %}">📋 Listado</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'expenses:charts' %}">📈 Gráficos</a>
+        </li>
+      </ul>
+
+      {% if user.is_authenticated %}
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <form method="post" action="{% url 'expenses:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-link nav-link" style="display:inline; padding:0; border:none; background:none;">
+              🚪 Cerrar sesión
+            </button>
+          </form>
+        </li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <h3>
+    Bienvenido, 
+    {% if request.user.username == 'wlopez' %}
+      <span class="rainbow-text">{{ request.user.get_full_name }}</span>
+    {% else %}
+      {{ request.user.get_full_name }}
+    {% endif %}
+  </h3>
+  {% block content %}{% endblock %}
+</div>
+
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

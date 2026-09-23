@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Login - Sistema de Gastos</title>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-primary min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+                <div class="card shadow-lg border-0 rounded-lg">
+                    <div class="card-header bg-white border-0 pt-4 pb-0">
+                        <div class="text-center">
+                            <i class="fas fa-wallet fa-3x text-primary mb-3"></i>
+                            <h3 class="font-weight-bold text-primary mb-1">Sistema de Gastos</h3>
+                            <p class="text-muted small">Gestión familiar de ingresos y gastos</p>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <h4 class="card-title mb-4 text-center font-weight-bold">Iniciar Sesión</h4>
+
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            {% if form.errors %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Error:</strong> Usuario o contraseña inválidos.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endif %}
+
+                            <div class="form-floating mb-3">
+                                <input type="text" name="username" id="id_username" class="form-control form-control-lg"
+                                       placeholder="Usuario" autofocus required />
+                                <label for="id_username">
+                                    <i class="fas fa-user me-2"></i>Usuario
+                                </label>
+                            </div>
+
+                            <div class="form-floating mb-4">
+                                <input type="password" name="password" id="id_password" class="form-control form-control-lg"
+                                       placeholder="Contraseña" required />
+                                <label for="id_password">
+                                    <i class="fas fa-lock me-2"></i>Contraseña
+                                </label>
+                            </div>
+
+                            <div class="d-grid">
+                                <button class="btn btn-primary btn-lg shadow-sm" type="submit">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Sistema seguro de gestión financiera
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .form-floating > label {
+            padding-left: 2.5rem;
+        }
+
+        .form-floating > .form-control {
+            padding-left: 2.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .text-primary {
+            color: #667eea !important;
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .card {
+                margin: 1rem 0;
+            }
+
+            .fas.fa-wallet {
+                font-size: 2.5rem !important;
+            }
+        }
+    </style>
+
+<script src="{% static 'bootstrap/js/jquery.min.js' %}"></script>
+<script src="{% static 'bootstrap/js/popper.min.js' %}"></script>
+<script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+</body>
+</html>

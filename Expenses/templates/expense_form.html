@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Formulario de Gasto{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Amount -->
+             <div class="col-12 col-md-6 mb-3">
+                {{ form.type.label_tag }}
+                {{ form.type }}
+                {% if form.type.errors %}
+                    <div class="text-danger">{{ form.type.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="col-12 col-md-6 mb-3">
+                {{ form.amount.label_tag }}
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                    <div class="text-danger">{{ form.amount.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Date -->
+            <div class="col-12 col-md-6 mb-3">
+                {{ form.date.label_tag }}
+                {{ form.date }}
+                {% if form.date.errors %}
+                    <div class="text-danger">{{ form.date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Category -->
+            <div class="col-12 col-md-6 mb-3">
+                {{ form.category.label_tag }}
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <div class="text-danger">{{ form.category.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Paid Date -->
+            <div class="col-12 col-md-6 mb-3">
+                {{ form.paid_date.label_tag }}
+                {{ form.paid_date }}
+                {% if form.paid_date.errors %}
+                    <div class="text-danger">{{ form.paid_date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="col-12 mb-3">
+                {{ form.description.label_tag }}
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="text-danger">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Image -->
+            <div class="col-12 mb-3">
+                {{ form.image.label_tag }}
+                {{ form.image }}
+                {% if form.image.errors %}
+                    <div class="text-danger">{{ form.image.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Is Paid -->
+            <div class="col-12 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input"
+                        type="checkbox"
+                        name="{{ form.is_paid.name }}"
+                        id="{{ form.is_paid.id_for_label }}"
+                        {% if form.is_paid.value %}checked{% endif %}>
+
+                    <label class="form-check-label" for="{{ form.is_paid.id_for_label }}">
+                    {{ form.is_paid.label }}
+                    </label>
+
+                    {% if form.is_paid.errors %}
+                    <div class="text-danger">{{ form.is_paid.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Submit button -->
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
