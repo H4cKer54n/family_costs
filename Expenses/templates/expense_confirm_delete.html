@@ -1,14 +1,47 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Movimiento - FamilyCosts{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 600px;">
-    <h2>Eliminar Gasto</h2>
-    <p>¿Seguro querés eliminar el gasto: <strong>{{ expense.description }}</strong> por ${{ expense.amount }}?</p>
+<div class="max-w-md mx-auto py-8">
+  <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm text-center space-y-4">
+    <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl shadow-sm">
+      <i class="fas fa-trash-alt"></i>
+    </div>
 
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Sí, eliminar</button>
-        <a href="{% url 'expenses:list' %}" class="btn btn-secondary">Cancelar</a>
+    <div>
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">¿Confirmas la eliminación?</h2>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2">
+        Esta acción es permanente y no se podrá recuperar.
+      </p>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 text-left text-sm space-y-1">
+      <div class="flex justify-between">
+        <span class="text-slate-400 text-xs">Descripción:</span>
+        <span class="font-semibold text-slate-800 dark:text-slate-200">{{ expense.description|default:"Sin descripción" }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-400 text-xs">Monto:</span>
+        <span class="font-bold text-rose-600 dark:text-rose-400">${{ expense.amount|floatformat:2 }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-400 text-xs">Fecha:</span>
+        <span class="text-slate-700 dark:text-slate-300">{{ expense.date|date:"d/m/Y" }}</span>
+      </div>
+    </div>
+
+    <form method="post" class="flex items-center justify-center gap-3 pt-3">
+      {% csrf_token %}
+      <a href="{% url 'expenses:list' %}" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
+        Cancelar
+      </a>
+      <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm shadow-md shadow-rose-600/20 transition active:scale-95">
+        <i class="fas fa-trash"></i>
+        <span>Sí, Eliminar</span>
+      </button>
     </form>
+  </div>
 </div>
-{% endblock %}
+{% endblock %}

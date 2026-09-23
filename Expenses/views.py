@@ -1,11 +1,14 @@
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Expense, Category
 from django.contrib.auth.models import User
-from .forms import ExpenseForm
+from .forms import ExpenseForm, LoginForm, UserCreateCustomForm, UserPasswordChangeCustomForm
 from django.core.paginator import Paginator
 from django.db.models import Sum, Q, F, Case, When, Value, DecimalField
 from django.db.models.functions import TruncMonth, TruncDay
@@ -265,7 +268,7 @@ def charts_view(request):
         'monthly_gastos': json.dumps(monthly_gastos),
         'daily_labels': json.dumps(daily_labels),
         'daily_ingresos': json.dumps(daily_ingresos),
-        'daily_gastos': json.dumps(daily_gastos),
+        'daily_gastos': daily_gastos,
         'total_ingresos': total_ingresos,
         'total_gastos': total_gastos,
         'balance': balance,
@@ -274,3 +277,61 @@ def charts_view(request):
     }
 
     return render(request, 'charts.html', context)
+
+
+class CustomLoginView(LoginView):
+    template_name = 'login.html'
+    authentication_form = LoginForm
+
+    def form_valid(self, form):
+        remember_me = form.cleaned_data.get('remember_me')
+        if remember_me:
+            # 2 semanas (14 días en segundos)
+            self.request.session.set_expiry(1209600)
+        else:
+            # Expira cuando el navegador se cierra
+            self.request.session.set_expiry(0)
+        return super().form_valid(form)
+
+
+class UserListView(LoginRequiredMixin, ListView):
+    model = User
+    template_name = 'user_list.html'
+    context_object_name = 'user_list'
+    ordering = ['username']
+
+
+class UserCreateView(LoginRequiredMixin, CreateView):
+    model = User
+    form_class = UserCreateCustomForm
+    template_name = 'user_form.html'
+    success_url = reverse_lazy('expenses:user_list')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Usuario '{self.object.username}' creado con éxito.")
+        return response
+
+
+@login_required
+def user_change_password(request, pk):
+    target_user = get_object_or_404(User, pk=pk)
+
+    # Permitir que el usuario cambie su propia contraseña o que un superuser/staff cambie la de otros
+    if request.user != target_user and not request.user.is_staff:
+        messages.error(request, "No tienes permisos para modificar la contraseña de otro usuario.")
+        return redirect('expenses:user_list')
+
+    if request.method == 'POST':
+        form = UserPasswordChangeCustomForm(user=target_user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Contraseña actualizada para '{target_user.username}'.")
+            return redirect('expenses:user_list')
+    else:
+        form = UserPasswordChangeCustomForm(user=target_user)
+
+    return render(request, 'user_password_change.html', {
+        'form': form,
+        'target_user': target_user
+    })

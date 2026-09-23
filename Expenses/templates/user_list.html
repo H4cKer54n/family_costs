@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Usuarios - FamilyCosts{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+        <i class="fas fa-users-cog text-cyan-500"></i>
+        <span>Integrantes de la Familia</span>
+      </h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Consulta y administra los usuarios con acceso al registro de gastos.
+      </p>
+    </div>
+
+    <div>
+      <a href="{% url 'expenses:user_create' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition active:scale-95">
+        <i class="fas fa-user-plus"></i>
+        <span>Crear Nuevo Usuario</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Vista Desktop: Tabla de usuarios -->
+  <div class="hidden sm:block bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">
+        <tr>
+          <th scope="col" class="py-3.5 px-6">Usuario</th>
+          <th scope="col" class="py-3.5 px-6">Nombre Completo</th>
+          <th scope="col" class="py-3.5 px-6">Correo</th>
+          <th scope="col" class="py-3.5 px-6">Rol / Estado</th>
+          <th scope="col" class="py-3.5 px-6">Último Acceso</th>
+          <th scope="col" class="py-3.5 px-6 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+        {% for u in user_list %}
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+          <!-- Usuario -->
+          <td class="py-4 px-6 whitespace-nowrap">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+                {{ u.username|slice:":2" }}
+              </div>
+              <span class="font-bold text-slate-900 dark:text-white">
+                {% if u.username == 'wlopez' %}
+                  <span class="rainbow-text">{{ u.username }}</span>
+                {% else %}
+                  {{ u.username }}
+                {% endif %}
+              </span>
+            </div>
+          </td>
+
+          <!-- Nombre -->
+          <td class="py-4 px-6 text-slate-700 dark:text-slate-300">
+            {{ u.get_full_name|default:"-" }}
+          </td>
+
+          <!-- Correo -->
+          <td class="py-4 px-6 text-slate-500 dark:text-slate-400">
+            {{ u.email|default:"-" }}
+          </td>
+
+          <!-- Rol / Estado -->
+          <td class="py-4 px-6 whitespace-nowrap">
+            {% if u.is_superuser %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
+                <i class="fas fa-crown text-[10px]"></i>Admin
+              </span>
+            {% elif u.is_staff %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60">
+                <i class="fas fa-user-shield text-[10px]"></i>Staff
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <i class="fas fa-user text-[10px]"></i>Miembro
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Último Acceso -->
+          <td class="py-4 px-6 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            {{ u.last_login|date:"d/m/Y H:i"|default:"Nunca" }}
+          </td>
+
+          <!-- Acciones -->
+          <td class="py-4 px-6 whitespace-nowrap text-center">
+            {% if request.user == u or request.user.is_staff %}
+              <a href="{% url 'expenses:user_change_password' u.pk %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                <i class="fas fa-key text-amber-500"></i>
+                <span>Cambiar Contraseña</span>
+              </a>
+            {% else %}
+              <span class="text-xs text-slate-400">-</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Vista Móvil: Cards -->
+  <div class="sm:hidden space-y-3">
+    {% for u in user_list %}
+    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs uppercase">
+            {{ u.username|slice:":2" }}
+          </div>
+          <div>
+            <h4 class="font-bold text-slate-900 dark:text-white text-sm">
+              {% if u.username == 'wlopez' %}
+                <span class="rainbow-text">{{ u.username }}</span>
+              {% else %}
+                {{ u.username }}
+              {% endif %}
+            </h4>
+            <p class="text-xs text-slate-400">{{ u.get_full_name|default:"Sin nombre" }}</p>
+          </div>
+        </div>
+
+        <div>
+          {% if u.is_superuser %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
+              Admin
+            </span>
+          {% else %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              Miembro
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500">
+        <span>Último: {{ u.last_login|date:"d/m/Y"|default:"Nunca" }}</span>
+
+        {% if request.user == u or request.user.is_staff %}
+          <a href="{% url 'expenses:user_change_password' u.pk %}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200">
+            <i class="fas fa-key text-amber-500"></i>
+            <span>Contraseña</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Crear Usuario - FamilyCosts{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-6">
+  <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm">
+    <div class="flex items-center justify-between pb-6 mb-6 border-b border-slate-100 dark:border-slate-800">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm">
+            <i class="fas fa-user-plus"></i>
+          </span>
+          Registrar Usuario
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Añade un nuevo integrante de la familia al sistema.
+        </p>
+      </div>
+
+      <a href="{% url 'expenses:user_list' %}" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <i class="fas fa-times text-lg"></i>
+      </a>
+    </div>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-sm">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+          Nombre de Usuario *
+        </label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <p class="text-xs text-rose-500 mt-1">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+            Nombre
+          </label>
+          {{ form.first_name }}
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+            Apellido
+          </label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+          Correo Electrónico (Opcional)
+        </label>
+        {{ form.email }}
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+          Contraseña *
+        </label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}
+          <p class="text-xs text-rose-500 mt-1">{{ form.password1.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+          Confirmar Contraseña *
+        </label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+          <p class="text-xs text-rose-500 mt-1">{{ form.password2.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+        <a href="{% url 'expenses:user_list' %}" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
+          Cancelar
+        </a>
+        <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition active:scale-95">
+          <i class="fas fa-check"></i>
+          <span>Crear Usuario</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

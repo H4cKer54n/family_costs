@@ -1,257 +1,332 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Gráficos - Sistema de Gastos{% endblock %}
+
+{% block title %}Gráficos y Estadísticas - FamilyCosts{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
 
 {% block content %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="space-y-6">
 
-<div class="container mt-4">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="mb-3">
-                    <i class="fas fa-chart-pie text-primary me-2"></i>Gráficos de Gastos e Ingresos
-                </h2>
-
-                <!-- Filtros de fecha -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="fas fa-filter me-2"></i>Filtrar por período
-                        </h5>
-                        <form method="get" class="row g-3">
-                            <div class="col-md-4">
-                                <label for="date_from" class="form-label">Fecha desde</label>
-                                <input type="date" name="date_from" id="date_from" class="form-control"
-                                       value="{{ date_from }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="date_to" class="form-label">Fecha hasta</label>
-                                <input type="date" name="date_to" id="date_to" class="form-control"
-                                       value="{{ date_to }}">
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary me-2">
-                                    <i class="fas fa-search me-1"></i>Filtrar
-                                </button>
-                                <a href="{% url 'expenses:charts' %}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times me-1"></i>Limpiar
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Resumen de totales -->
-        <div class="row mb-4">
-            <div class="col-md-4 mb-3">
-                <div class="card bg-success text-white h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-arrow-up fa-2x mb-2"></i>
-                        <h4 class="card-title">${{ total_ingresos|floatformat:2 }}</h4>
-                        <p class="card-text mb-0">Total Ingresos</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card bg-danger text-white h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-arrow-down fa-2x mb-2"></i>
-                        <h4 class="card-title">${{ total_gastos|floatformat:2 }}</h4>
-                        <p class="card-text mb-0">Total Gastos</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card {% if balance >= 0 %}bg-info{% else %}bg-warning{% endif %} text-white h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-balance-scale fa-2x mb-2"></i>
-                        <h4 class="card-title">${{ balance|floatformat:2 }}</h4>
-                        <p class="card-text mb-0">Balance</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráficos -->
-        <div class="row">
-            <!-- Gráfico de Dona: Gastos por Categoría -->
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-chart-pie me-2"></i>Gastos por Categoría
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="categoryChart" width="100%" height="300"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráfico de Barras: Ingresos vs Gastos por Mes -->
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-chart-bar me-2"></i>Ingresos vs Gastos por Mes
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="monthlyChart" width="100%" height="300"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráfico de Líneas: Balance Diario -->
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-chart-line me-2"></i>Balance Diario
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="dailyChart" width="100%" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- Encabezado y Filtro de fechas -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+        <i class="fas fa-chart-pie text-indigo-500"></i>
+        <span>Gráficos y Reportes</span>
+      </h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Visualiza el rendimiento financiero, categorías de consumo y evolución mensual.
+      </p>
     </div>
 
-    <script src="{% static 'bootstrap/js/jquery.min.js' %}"></script>
-    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <!-- Filtro rápido por fechas -->
+    <form method="get" class="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm text-xs sm:text-sm">
+      <div class="flex items-center gap-1.5 px-2">
+        <label for="date_from" class="text-slate-400 font-medium">Desde:</label>
+        <input type="date" name="date_from" id="date_from" value="{{ date_from }}" class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 py-1 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div class="flex items-center gap-1.5 px-2">
+        <label for="date_to" class="text-slate-400 font-medium">Hasta:</label>
+        <input type="date" name="date_to" id="date_to" value="{{ date_to }}" class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 py-1 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition">
+        Filtrar
+      </button>
+      {% if date_from or date_to %}
+        <a href="{% url 'expenses:charts' %}" class="px-2.5 py-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="Limpiar fechas">
+          <i class="fas fa-times"></i>
+        </a>
+      {% endif %}
+    </form>
+  </div>
 
-    <script>
-        // Configuración común para gráficos
-        Chart.defaults.responsive = true;
-        Chart.defaults.maintainAspectRatio = false;
+  <!-- Resumen de KPIs -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- Total Ingresos -->
+    <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Total Ingresos</p>
+        <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">${{ total_ingresos|floatformat:2 }}</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Entradas del período</p>
+      </div>
+      <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
+        <i class="fas fa-arrow-down"></i>
+      </div>
+    </div>
 
-        // Gráfico de Dona: Gastos por Categoría
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: {{ category_labels|safe }},
-                datasets: [{
-                    data: {{ category_values|safe }},
-                    backgroundColor: [
-                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-                        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
-                        '#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': $' + context.parsed.toFixed(2);
-                            }
-                        }
-                    }
-                }
-            }
-        });
+    <!-- Total Gastos -->
+    <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Total Gastos</p>
+        <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">${{ total_gastos|floatformat:2 }}</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Salidas del período</p>
+      </div>
+      <div class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl">
+        <i class="fas fa-arrow-up"></i>
+      </div>
+    </div>
 
-        // Gráfico de Barras: Ingresos vs Gastos por Mes
-        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-        new Chart(monthlyCtx, {
-            type: 'bar',
-            data: {
-                labels: {{ monthly_labels|safe }},
-                datasets: [{
-                    label: 'Ingresos',
-                    data: {{ monthly_ingresos|safe }},
-                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Gastos',
-                    data: {{ monthly_gastos|safe }},
-                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                    borderColor: 'rgba(220, 53, 69, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toFixed(0);
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
-                            }
-                        }
-                    }
-                }
-            }
-        });
+    <!-- Balance Neto -->
+    <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Balance Neto</p>
+        <h3 class="text-2xl font-extrabold {% if balance >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %} mt-1">
+          {% if balance >= 0 %}+{% endif %}${{ balance|floatformat:2 }}
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5">Diferencia neta total</p>
+      </div>
+      <div class="w-12 h-12 rounded-2xl {% if balance >= 0 %}bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400{% else %}bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400{% endif %} flex items-center justify-center text-xl">
+        <i class="fas fa-scale-balanced"></i>
+      </div>
+    </div>
+  </div>
 
-        // Gráfico de Líneas: Balance Diario
-        const dailyCtx = document.getElementById('dailyChart').getContext('2d');
-        new Chart(dailyCtx, {
-            type: 'line',
-            data: {
-                labels: {{ daily_labels|safe }},
-                datasets: [{
-                    label: 'Ingresos Diarios',
-                    data: {{ daily_ingresos|safe }},
-                    borderColor: 'rgba(40, 167, 69, 1)',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }, {
-                    label: 'Gastos Diarios',
-                    data: {{ daily_gastos|safe }},
-                    borderColor: 'rgba(220, 53, 69, 1)',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toFixed(0);
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    </script>
+  <!-- Contenedores de Gráficos -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Gráfico 1: Gastos por Categoría (Dona moderna) -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fas fa-chart-pie text-indigo-500"></i> Distribución por Categoría
+        </h3>
+        <span class="text-xs text-slate-400">Solo salidas/gastos</span>
+      </div>
+      <div class="relative h-72 sm:h-80 flex items-center justify-center">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Ingresos vs Gastos por Mes -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fas fa-chart-column text-emerald-500"></i> Ingresos vs Gastos Mensuales
+        </h3>
+        <span class="text-xs text-slate-400">Comparativa mensual</span>
+      </div>
+      <div class="relative h-72 sm:h-80">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 3: Balance Diario (Ancho completo) -->
+    <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fas fa-chart-line text-cyan-500"></i> Flujo Diario de Movimientos
+        </h3>
+        <span class="text-xs text-slate-400">Tendencia histórica</span>
+      </div>
+      <div class="relative h-72 sm:h-80">
+        <canvas id="dailyChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
 </div>
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Obtener colores según tema activo
+  function isDarkMode() {
+    return document.documentElement.classList.contains('dark');
+  }
+
+  function getThemeColors() {
+    const dark = isDarkMode();
+    return {
+      textColor: dark ? '#cbd5e1' : '#475569',
+      gridColor: dark ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.7)',
+      tooltipBg: dark ? '#0f172a' : '#ffffff',
+      tooltipText: dark ? '#f8fafc' : '#0f172a',
+      borderColor: dark ? '#1e293b' : '#ffffff'
+    };
+  }
+
+  let categoryChartInstance = null;
+  let monthlyChartInstance = null;
+  let dailyChartInstance = null;
+
+  function initCharts() {
+    const theme = getThemeColors();
+
+    // 1. Gráfico de Categoría (Doughnut)
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    if (categoryChartInstance) categoryChartInstance.destroy();
+
+    const catLabels = {{ category_labels|safe }};
+    const catValues = {{ category_values|safe }};
+
+    categoryChartInstance = new Chart(categoryCtx, {
+      type: 'doughnut',
+      data: {
+        labels: catLabels,
+        datasets: [{
+          data: catValues,
+          backgroundColor: [
+            '#6366f1', '#10b981', '#f59e0b', '#ef4444',
+            '#06b6d4', '#8b5cf6', '#ec4899', '#14b8a6',
+            '#3b82f6', '#f97316', '#84cc16', '#64748b'
+          ],
+          borderWidth: 2,
+          borderColor: theme.borderColor,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: theme.textColor,
+              usePointStyle: true,
+              padding: 16,
+              font: { family: 'Plus Jakarta Sans', size: 12 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ` ${context.label}: $${context.parsed.toLocaleString('es-UY', {minimumFractionDigits: 2})}`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // 2. Gráfico Mensual (Bar)
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    if (monthlyChartInstance) monthlyChartInstance.destroy();
+
+    monthlyChartInstance = new Chart(monthlyCtx, {
+      type: 'bar',
+      data: {
+        labels: {{ monthly_labels|safe }},
+        datasets: [
+          {
+            label: 'Ingresos',
+            data: {{ monthly_ingresos|safe }},
+            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+            borderRadius: 8,
+            borderSkipped: false
+          },
+          {
+            label: 'Gastos',
+            data: {{ monthly_gastos|safe }},
+            backgroundColor: 'rgba(239, 68, 68, 0.85)',
+            borderRadius: 8,
+            borderSkipped: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { color: theme.gridColor },
+            ticks: { color: theme.textColor, font: { family: 'Plus Jakarta Sans' } }
+          },
+          y: {
+            grid: { color: theme.gridColor },
+            ticks: {
+              color: theme.textColor,
+              font: { family: 'Plus Jakarta Sans' },
+              callback: value => '$' + value.toLocaleString()
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: theme.textColor, usePointStyle: true, font: { family: 'Plus Jakarta Sans' } }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ` ${context.dataset.label}: $${context.parsed.y.toLocaleString('es-UY', {minimumFractionDigits: 2})}`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // 3. Gráfico Diario (Line)
+    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+    if (dailyChartInstance) dailyChartInstance.destroy();
+
+    dailyChartInstance = new Chart(dailyCtx, {
+      type: 'line',
+      data: {
+        labels: {{ daily_labels|safe }},
+        datasets: [
+          {
+            label: 'Ingresos diarios',
+            data: {{ daily_ingresos|safe }},
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 3
+          },
+          {
+            label: 'Gastos diarios',
+            data: {{ daily_gastos|safe }},
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.35,
+            fill: true,
+            pointRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { color: theme.gridColor },
+            ticks: { color: theme.textColor, font: { family: 'Plus Jakarta Sans' } }
+          },
+          y: {
+            grid: { color: theme.gridColor },
+            ticks: {
+              color: theme.textColor,
+              font: { family: 'Plus Jakarta Sans' },
+              callback: value => '$' + value.toLocaleString()
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: theme.textColor, usePointStyle: true, font: { family: 'Plus Jakarta Sans' } }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ` ${context.dataset.label}: $${context.parsed.y.toLocaleString('es-UY', {minimumFractionDigits: 2})}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Inicializar al cargar
+  document.addEventListener('DOMContentLoaded', initCharts);
+
+  // Re-dibujar si cambia tema Dark/Light
+  window.addEventListener('themechange', initCharts);
+</script>
+{% endblock %}

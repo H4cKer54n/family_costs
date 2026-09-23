@@ -1,98 +1,138 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Formulario de Gasto{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar Movimiento{% else %}Nuevo Movimiento{% endif %} - FamilyCosts{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="row">
-            <!-- Amount -->
-             <div class="col-12 col-md-6 mb-3">
-                {{ form.type.label_tag }}
-                {{ form.type }}
-                {% if form.type.errors %}
-                    <div class="text-danger">{{ form.type.errors }}</div>
-                {% endif %}
-            </div>
-            <div class="col-12 col-md-6 mb-3">
-                {{ form.amount.label_tag }}
-                {{ form.amount }}
-                {% if form.amount.errors %}
-                    <div class="text-danger">{{ form.amount.errors }}</div>
-                {% endif %}
-            </div>
+<div class="max-w-2xl mx-auto py-4">
+  <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm">
+    <div class="flex items-center justify-between pb-6 mb-6 border-b border-slate-100 dark:border-slate-800">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
+          <span class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm">
+            <i class="fas fa-{% if form.instance.pk %}pen{% else %}plus{% endif %}"></i>
+          </span>
+          {% if form.instance.pk %}Editar Movimiento{% else %}Registrar Movimiento{% endif %}
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Completa los datos del ingreso o gasto para mantener tus cuentas al día.
+        </p>
+      </div>
 
-            <!-- Date -->
-            <div class="col-12 col-md-6 mb-3">
-                {{ form.date.label_tag }}
-                {{ form.date }}
-                {% if form.date.errors %}
-                    <div class="text-danger">{{ form.date.errors }}</div>
-                {% endif %}
-            </div>
+      <a href="{% url 'expenses:list' %}" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <i class="fas fa-times text-lg"></i>
+      </a>
+    </div>
 
-            <!-- Category -->
-            <div class="col-12 col-md-6 mb-3">
-                {{ form.category.label_tag }}
-                {{ form.category }}
-                {% if form.category.errors %}
-                    <div class="text-danger">{{ form.category.errors }}</div>
-                {% endif %}
-            </div>
+    <form method="post" enctype="multipart/form-data" class="space-y-5">
+      {% csrf_token %}
 
-            <!-- Paid Date -->
-            <div class="col-12 col-md-6 mb-3">
-                {{ form.paid_date.label_tag }}
-                {{ form.paid_date }}
-                {% if form.paid_date.errors %}
-                    <div class="text-danger">{{ form.paid_date.errors }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Description -->
-            <div class="col-12 mb-3">
-                {{ form.description.label_tag }}
-                {{ form.description }}
-                {% if form.description.errors %}
-                    <div class="text-danger">{{ form.description.errors }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Image -->
-            <div class="col-12 mb-3">
-                {{ form.image.label_tag }}
-                {{ form.image }}
-                {% if form.image.errors %}
-                    <div class="text-danger">{{ form.image.errors }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Is Paid -->
-            <div class="col-12 mb-3">
-                <div class="form-check">
-                    <input class="form-check-input"
-                        type="checkbox"
-                        name="{{ form.is_paid.name }}"
-                        id="{{ form.is_paid.id_for_label }}"
-                        {% if form.is_paid.value %}checked{% endif %}>
-
-                    <label class="form-check-label" for="{{ form.is_paid.id_for_label }}">
-                    {{ form.is_paid.label }}
-                    </label>
-
-                    {% if form.is_paid.errors %}
-                    <div class="text-danger">{{ form.is_paid.errors }}</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Submit button -->
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Guardar</button>
-            </div>
+      {% if form.non_field_errors %}
+        <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-sm">
+          {{ form.non_field_errors }}
         </div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Tipo -->
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+            Tipo de movimiento *
+          </label>
+          {{ form.type }}
+          {% if form.type.errors %}
+            <p class="text-xs text-rose-500 mt-1">{{ form.type.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Monto -->
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+            Monto ($) *
+          </label>
+          {{ form.amount }}
+          {% if form.amount.errors %}
+            <p class="text-xs text-rose-500 mt-1">{{ form.amount.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Fecha -->
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+            Fecha del gasto/ingreso *
+          </label>
+          {{ form.date }}
+          {% if form.date.errors %}
+            <p class="text-xs text-rose-500 mt-1">{{ form.date.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Categoría -->
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+            Categoría *
+          </label>
+          {{ form.category }}
+          {% if form.category.errors %}
+            <p class="text-xs text-rose-500 mt-1">{{ form.category.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+          Descripción o Detalle
+        </label>
+        {{ form.description }}
+        {% if form.description.errors %}
+          <p class="text-xs text-rose-500 mt-1">{{ form.description.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Comprobante / Archivo -->
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+          Comprobante / Foto (Opcional)
+        </label>
+        {{ form.image }}
+        {% if form.image.errors %}
+          <p class="text-xs text-rose-500 mt-1">{{ form.image.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Pagado y Fecha de pago -->
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 space-y-4">
+        <div class="flex items-center gap-3">
+          {{ form.is_paid }}
+          <label for="{{ form.is_paid.id_for_label }}" class="text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-pointer select-none">
+            Gasto / Ingreso Pagado (Efectivizado)
+          </label>
+        </div>
+
+        <div id="paidDateContainer">
+          <label class="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+            Fecha de Efectivización / Pago
+          </label>
+          {{ form.paid_date }}
+          {% if form.paid_date.errors %}
+            <p class="text-xs text-rose-500 mt-1">{{ form.paid_date.errors.0 }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+        <a href="{% url 'expenses:list' %}" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition">
+          Cancelar
+        </a>
+        <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition active:scale-95">
+          <i class="fas fa-save"></i>
+          <span>Guardar Registro</span>
+        </button>
+      </div>
     </form>
+  </div>
 </div>
 {% endblock %}
+

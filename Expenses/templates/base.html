@@ -1,83 +1,287 @@
 {% load static %}
-
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="h-full">
 <head>
   <meta charset="UTF-8">
-  <title>{% block title %}Admin de Gastos{% endblock %}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Gestión de Gastos Familiares{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
 
-  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
- <style>
-  .rainbow-text {
-    font-weight: bold;
-    background: linear-gradient(90deg, 
-      red, orange, yellow, green, blue, indigo, violet);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: rainbow 3s linear infinite;
-    display: inline-block;
-  }
+  <!-- Script de tema para evitar parpadeo blanco (FOUC) -->
+  <script>
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
 
-  @keyframes rainbow {
-    0% {
-      background-position: 0% 50%;
+  <!-- Tailwind CSS CDN con plugins -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
     }
-    100% {
-      background-position: 100% 50%;
+  </script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-  }
-</style>
+    .rainbow-text {
+      font-weight: 800;
+      background: linear-gradient(90deg, #ef4444, #f97316, #eab308, #10b981, #06b6d4, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow 4s linear infinite;
+      display: inline-block;
+      background-size: 200% auto;
+    }
+    @keyframes rainbow {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    /* Estilizar scrollbars sutiles */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.5);
+      border-radius: 4px;
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
 </head>
-<body>
-<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'expenses:list' %}">💰 Gastos/Entradas</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'expenses:add' %}">➕ Agregar Gasto</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'expenses:list' %}">📋 Listado</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'expenses:charts' %}">📈 Gráficos</a>
-        </li>
-      </ul>
+<body class="min-h-full flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
+
+  <!-- Navegación Superior -->
+  <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo y título -->
+        <div class="flex items-center space-x-3">
+          <a href="{% url 'expenses:list' %}" class="flex items-center gap-2.5 group">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
+              <i class="fas fa-wallet text-lg"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-white dark:via-indigo-200 dark:to-slate-200 bg-clip-text text-transparent">
+                FamilyCosts
+              </span>
+              <span class="text-[10px] uppercase font-semibold tracking-wider text-slate-400 dark:text-slate-500 hidden sm:inline">
+                Gestión Financiera
+              </span>
+            </div>
+          </a>
+
+          <!-- Links Desktop -->
+          <nav class="hidden md:flex items-center space-x-1 pl-6">
+            <a href="{% url 'expenses:list' %}" class="px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i class="fas fa-receipt mr-1.5 text-indigo-500"></i>Listado
+            </a>
+            <a href="{% url 'expenses:add' %}" class="px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i class="fas fa-plus-circle mr-1.5 text-emerald-500"></i>Nuevo Registro
+            </a>
+            <a href="{% url 'expenses:charts' %}" class="px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i class="fas fa-chart-pie mr-1.5 text-amber-500"></i>Gráficos
+            </a>
+            <a href="{% url 'expenses:user_list' %}" class="px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <i class="fas fa-users-cog mr-1.5 text-cyan-500"></i>Usuarios
+            </a>
+          </nav>
+        </div>
+
+        <!-- Acciones a la derecha: Dark Mode & Usuario -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          
+          <!-- Botón de Modo Oscuro / Claro -->
+          <button id="themeToggleBtn" type="button" aria-label="Cambiar tema" class="p-2.5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <i id="themeToggleDarkIcon" class="fas fa-moon hidden text-base"></i>
+            <i id="themeToggleLightIcon" class="fas fa-sun hidden text-base text-amber-400"></i>
+          </button>
+
+          {% if user.is_authenticated %}
+            <!-- Saludo de usuario Desktop -->
+            <div class="hidden lg:flex items-center pl-2 border-l border-slate-200 dark:border-slate-800 text-sm">
+              <span class="text-slate-500 dark:text-slate-400 mr-1.5">Hola,</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200">
+                {% if request.user.username == 'wlopez' %}
+                  <span class="rainbow-text">{{ request.user.get_full_name|default:request.user.username }}</span>
+                {% else %}
+                  {{ request.user.get_full_name|default:request.user.username }}
+                {% endif %}
+              </span>
+            </div>
+
+            <!-- Logout -->
+            <form method="post" action="{% url 'expenses:logout' %}" class="inline">
+              {% csrf_token %}
+              <button type="submit" title="Cerrar sesión" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 transition">
+                <i class="fas fa-arrow-right-from-bracket"></i>
+                <span>Salir</span>
+              </button>
+            </form>
+          {% endif %}
+
+          <!-- Botón Hamburguesa Móvil -->
+          <button id="mobileMenuBtn" type="button" class="md:hidden p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none" aria-label="Abrir menú">
+            <i class="fas fa-bars text-lg"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Menú desplegable para móvil -->
+    <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 pt-3 pb-5 space-y-2">
+      {% if user.is_authenticated %}
+      <div class="pb-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-sm">
+        <span class="text-slate-500 dark:text-slate-400">Usuario activo:</span>
+        <span class="font-bold text-slate-800 dark:text-slate-200">
+          {% if request.user.username == 'wlopez' %}
+            <span class="rainbow-text">{{ request.user.get_full_name|default:request.user.username }}</span>
+          {% else %}
+            {{ request.user.get_full_name|default:request.user.username }}
+          {% endif %}
+        </span>
+      </div>
+      {% endif %}
+
+      <a href="{% url 'expenses:list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+        <i class="fas fa-receipt text-indigo-500 w-5"></i>Listado de Movimientos
+      </a>
+      <a href="{% url 'expenses:add' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+        <i class="fas fa-plus-circle text-emerald-500 w-5"></i>Nuevo Ingreso/Gasto
+      </a>
+      <a href="{% url 'expenses:charts' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+        <i class="fas fa-chart-pie text-amber-500 w-5"></i>Gráficos y Estadísticas
+      </a>
+      <a href="{% url 'expenses:user_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+        <i class="fas fa-users-cog text-cyan-500 w-5"></i>Gestión de Usuarios
+      </a>
 
       {% if user.is_authenticated %}
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <form method="post" action="{% url 'expenses:logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-link nav-link" style="display:inline; padding:0; border:none; background:none;">
-              🚪 Cerrar sesión
-            </button>
-          </form>
-        </li>
-      </ul>
+      <div class="pt-2 border-t border-slate-200 dark:border-slate-800">
+        <form method="post" action="{% url 'expenses:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50">
+            <i class="fas fa-arrow-right-from-bracket"></i>
+            Cerrar Sesión
+          </button>
+        </form>
+      </div>
       {% endif %}
     </div>
-  </div>
-</nav>
+  </header>
 
-<div class="container mt-4">
-  <h3>
-    Bienvenido, 
-    {% if request.user.username == 'wlopez' %}
-      <span class="rainbow-text">{{ request.user.get_full_name }}</span>
-    {% else %}
-      {{ request.user.get_full_name }}
-    {% endif %}
-  </h3>
-  {% block content %}{% endblock %}
-</div>
+  <!-- Notificaciones / Mensajes Django -->
+  {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+      {% for message in messages %}
+        <div class="flex items-center justify-between p-4 mb-3 rounded-2xl border text-sm font-medium shadow-sm transition-all
+          {% if message.tags == 'error' %}
+            bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/50 dark:border-rose-800/80 dark:text-rose-200
+          {% elif message.tags == 'success' %}
+            bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-800/80 dark:text-emerald-200
+          {% else %}
+            bg-indigo-50 border-indigo-200 text-indigo-800 dark:bg-indigo-950/50 dark:border-indigo-800/80 dark:text-indigo-200
+          {% endif %}">
+          <div class="flex items-center gap-2.5">
+            {% if message.tags == 'error' %}
+              <i class="fas fa-circle-exclamation text-rose-500 text-base"></i>
+            {% elif message.tags == 'success' %}
+              <i class="fas fa-circle-check text-emerald-500 text-base"></i>
+            {% else %}
+              <i class="fas fa-circle-info text-indigo-500 text-base"></i>
+            {% endif %}
+            <span>{{ message }}</span>
+          </div>
+          <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
-<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <!-- Contenido Principal -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500 dark:text-slate-500 transition-colors">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>© {{ now|date:"Y" }} FamilyCosts • Finanzas Familiares Claras y Sencillas</p>
+    </div>
+  </footer>
+
+  <!-- Scripts para Dark Mode & Drawer Móvil -->
+  <script>
+    // Manejo de Dark Mode
+    const themeToggleDarkIcon = document.getElementById('themeToggleDarkIcon');
+    const themeToggleLightIcon = document.getElementById('themeToggleLightIcon');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+    function syncThemeIcons() {
+      if (document.documentElement.classList.contains('dark')) {
+        themeToggleLightIcon.classList.remove('hidden');
+        themeToggleDarkIcon.classList.add('hidden');
+      } else {
+        themeToggleDarkIcon.classList.remove('hidden');
+        themeToggleLightIcon.classList.add('hidden');
+      }
+    }
+    syncThemeIcons();
+
+    themeToggleBtn.addEventListener('click', function() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      syncThemeIcons();
+      // Disparar evento para que gráficos Chart.js puedan escuchar el cambio de color
+      window.dispatchEvent(new Event('themechange'));
+    });
+
+    // Menú móvil toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenuBtn && mobileMenu) {
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+      });
+    }
+  </script>
+  {% block extra_scripts %}{% endblock %}
 </body>
 </html>
+
